@@ -1,19 +1,14 @@
-README.md – INT8 Quantized GEMM Kernel for T4
-
+# INT8 Quantized GEMM Kernel for NVIDIA T4 (sm_75)
 ---
 
 ```markdown
 # INT8 Quantized GEMM Kernel for NVIDIA T4 (sm_75)
 
-[![CUDA](https://img.shields.io/badge/CUDA-11.8+-green.svg)](https://developer.nvidia.com/cuda-toolkit)
-[![NVIDIA](https://img.shields.io/badge/NVIDIA-T4-76B900.svg)](https://www.nvidia.com/en-us/data-center/tesla-t4/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-A production‑ready, fused INT8 matrix multiplication (GEMM) kernel optimised for **NVIDIA T4** GPUs (sm_75) using Tensor Cores via CUDA WMMA. The kernel performs per‑tensor symmetric quantisation, implements shared‑memory tiling, warp‑level synchronisation, and full boundary handling – **all with zero register spills**.
+A production‑ready, fused INT8 matrix multiplication (GEMM) kernel optimised for NVIDIA T4 GPUs (sm_75) using Tensor Cores via CUDA WMMA. The kernel performs per‑tensor symmetric quantisation, implements shared‑memory tiling, warp‑level synchronisation, and full boundary handling – all with zero register spills.
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```
 
@@ -28,33 +23,31 @@ cuda-int8-gemm-optimization/
 
 ---
 
-## • Key Features
+## Key Features
 
-- **Tensor Core acceleration** – uses `wmma::mma_sync` for INT8 × INT8 → INT32 accumulation.
-- **Shared memory tiling** – 64×64 tiles with zero padding, 8 KB per block, enabling up to 8 blocks per SM.
-- **Zero register spills** – achieved through careful `__launch_bounds__` tuning and selective unrolling.
-- **Fused quantisation** – scaling, rounding, and saturation are performed inline, eliminating an extra pass.
-- **Full boundary handling** – works for any matrix dimensions (not multiples of 64) with correct padding.
-- **Warp‑private writeback** – each warp streams its 16×16 accumulator fragment to global memory using `__syncwarp()`.
-- **Robust host‑side error checking** – every CUDA API call validated, including asynchronous kernel errors.
+- Tensor Core acceleration – uses `wmma::mma_sync` for INT8 × INT8 → INT32 accumulation.
+- Shared memory tiling – 64×64 tiles with zero padding, 8 KB per block, enabling up to 8 blocks per SM.
+- Zero register spills – achieved through careful `__launch_bounds__` tuning and selective unrolling.
+- Fused quantisation – scaling, rounding, and saturation are performed inline, eliminating an extra pass.
+- Full boundary handling – works for any matrix dimensions (not multiples of 64) with correct padding.
+- Warp‑private writeback – each warp streams its 16×16 accumulator fragment to global memory using `__syncwarp()`.
+- Robust host‑side error checking – every CUDA API call validated, including asynchronous kernel errors.
 
 ---
 
-## 🏆 Performance
+## Performance
 
 **Hardware:** NVIDIA T4 (sm_75) on Google Colab  
 **Matrix size:** 4096 × 4096 × 4096 (M=N=K=4096)
 
-| Metric | Value |
-|--------|-------|
-| **Kernel execution time** | 20.37 ms (average over 100 runs) |
-| **Sustained INT8 throughput** | **6.75 TOPS** |
-| **Correctness** | PASS (0 mismatches vs CPU reference) |
-| **Register spills** | 0 bytes (stack frame, spills, loads) |
-| **Shared memory per block** | 8,192 bytes |
-| **Registers per thread** | 126 |
+- **Kernel execution time:** 20.37 ms (average over 100 runs)
+- **Sustained INT8 throughput:** 6.75 TOPS
+- **Correctness:** PASS (0 mismatches vs CPU reference)
+- **Register spills:** 0 bytes (stack frame, spills, loads)
+- **Shared memory per block:** 8,192 bytes
+- **Registers per thread:** 126
 
-**Compiler output (nvcc -O3 -arch=sm_75):**
+**Compiler output (`nvcc -O3 -arch=sm_75`):**
 ```
 
 0 bytes stack frame
@@ -66,7 +59,7 @@ Used 126 registers, 8192 bytes smem
 
 ---
 
-## • Compilation & Usage
+## Compilation & Usage
 
 ### Prerequisites
 - CUDA Toolkit 11.8 or later
@@ -87,7 +80,7 @@ The benchmark runs a 4096×4096×4096 GEMM, verifies correctness against a CPU r
 
 ---
 
-📖 How It Works
+How It Works
 
 1. Tiling: Each thread block handles a 64×64 output tile; K dimension is processed in 64‑element steps.
 2. Load: Global memory is loaded into shared memory using vectorised 32‑bit accesses (with safe fallback for unaligned/boundary cases).
@@ -97,13 +90,13 @@ The benchmark runs a 4096×4096×4096 GEMM, verifies correctness against a CPU r
 
 ---
 
-• Correctness Validation
+Correctness Validation
 
 The kernel is validated against a naive CPU implementation using random int8 inputs in the range [-12, 12]. The test passes if every output element differs by at most 1 (due to rounding differences). The benchmark reports [SUCCESS] when all checks pass.
 
 ---
 
-• Optimisation Journey
+Optimisation Journey
 
 This kernel underwent multiple rounds of rigorous correctness and performance audits. Key fixes include:
 
@@ -113,24 +106,24 @@ This kernel underwent multiple rounds of rigorous correctness and performance au
 · Bank conflicts: Used zero padding (stride = 64 bytes) for bank‑conflict‑free shared memory access.
 · Error handling: Added comprehensive CUDA error checking for both launch and runtime errors.
 
-See case-study.md for the full optimisation story.
+See docs/case-study.md for the full optimisation story.
 
 ---
 
-• License
+License
 
 This project is licensed under the MIT License – see the LICENSE file for details.
 
 ---
 
-• Author
+Author
 
 Mustafa-cuda-dev
-GitHub • LinkedIn
+GitHub: https://github.com/Mustafa-cuda-dev
 
 ---
 
-• Acknowledgements
+Acknowledgements
 
 · NVIDIA CUDA Toolkit and WMMA documentation
 · Google Colab for providing free T4 GPU access
